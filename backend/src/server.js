@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import notesRoutes from "./routes/notesRoutes.js";
 import { connectDB } from "./config/db.js";
 import rateLimiter from "./middleware/reateLimiter.js";
+import path from "path";
 
 
 
@@ -13,10 +14,12 @@ const app = express();
 
 const PORT = process.env.PORT || 5001
 // const MONGO_URL = process.env.MONGO_URL;
-
+const __dirname = path.resolve()
 
 // middleware
-app.use(cors())
+if(process.env.NODE_ENV !== "production") {
+    app.use(cors())
+}
 app.use(express.json()); // this middleware parses json body. req.body
 
 app.use(rateLimiter)
@@ -29,8 +32,19 @@ app.use(rateLimiter)
     
     
     
-    app.use("/api/notes", notesRoutes);
+app.use("/api/notes", notesRoutes);
+
+if(process.env.NODE_ENV === "production") {
     
+    app.use(express.static(path.join(__dirname, "../frontend/dist")))
+    
+    app.get("*", (req, res) => {
+        res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    });
+
+}
+
+
     
     // console.log("PORT is this  ---- :",PORT);
 connectDB().then( () =>{
